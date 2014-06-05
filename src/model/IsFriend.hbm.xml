@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 23.04.2014 16:22:24 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="model.IsFriend" table="IsFriend" catalog="bc">
+        <composite-id name="id" class="model.IsFriendId">
+            <key-property name="userId1" type="int">
+                <column name="user_id1" />
+            </key-property>
+            <key-property name="userId2" type="int">
+                <column name="user_id2" />
+            </key-property>
+        </composite-id>
+        <property name="status" type="string">
+            <column name="status" length="20" not-null="true" />
+        </property>
+    </class>
+</hibernate-mapping>

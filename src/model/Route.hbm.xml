@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 23.04.2014 16:22:24 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="model.Route" table="Route" catalog="bc">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="distance" type="float">
+            <column name="distance" precision="12" scale="0" not-null="true" />
+        </property>
+        <property name="starttime" type="timestamp">
+            <column name="starttime" length="0" not-null="true" />
+        </property>
+        <property name="stoptime" type="timestamp">
+            <column name="stoptime" length="0" not-null="true" />
+        </property>
+        <property name="userId" type="int">
+            <column name="user_id" length="45" not-null="true" />
+        </property>
+    </class>
+</hibernate-mapping>
