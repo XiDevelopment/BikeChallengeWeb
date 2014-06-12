@@ -6,19 +6,21 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import model.Route;
 import model.User;
 
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Expression;
 
 import persistence.HibernateUtil;
+import persistence.Querys;
+import persistence.Validation;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * @author Jakob
@@ -29,14 +31,13 @@ import com.google.gson.Gson;
 public class RouteRest {
 
 	private Session session = HibernateUtil.getSessionFactory().openSession();
-	private Query deleterRouteQuery = session
-			.createQuery("DELETE Route where id = :routeId and userId = :userId");
-	private Query getUserQuery = session
-			.createQuery("FROM User U where U.name = :userName");
+	private Query deleteRouteQuery = session
+			.createQuery(Querys.DELETE_ROUTE_QUERY);
+	private Query getUserQuery = session.createQuery(Querys.GET_USER_QUERY);
 	private Query getUserRoutesQuery = session
-			.createQuery("FROM Route R where R.userId = :userId");
+			.createQuery(Querys.GET_ROUTES_QUERY);
 	private Query getUserRouteQuery = session
-			.createQuery("FROM Route R where R.userId = :userId and R.id = :routeId");
+			.createQuery(Querys.GET_ROUTE_QUERY);
 	private Gson gson = new Gson();
 
 	/**
@@ -48,16 +49,19 @@ public class RouteRest {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getAllRoutes(@PathParam("username") String userName) {
+	public String getAllRoutes(@PathParam("username") String userName,
+			@QueryParam("pw") String password) {
 		User user = (User) getUserQuery.setParameter("userName", userName)
 				.uniqueResult();
 
-		if (user != null) {
-			return gson.toJson(getUserRoutesQuery.setParameter("userId",
-					user.getId()).list());
-		}
+		if (user == null)
+			return "Error";
 
-		return "Error";
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
+
+		return gson.toJson(getUserRoutesQuery.setParameter("userId",
+				user.getId()).list());
 	}
 
 	/**
@@ -73,17 +77,25 @@ public class RouteRest {
 	@Path("/{routeId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String getRoute(@PathParam("username") String userName,
+			@QueryParam("pw") String password,
 			@PathParam("routeId") String routeId) {
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
+
 		User user = (User) getUserQuery.setParameter("userName", userName)
 				.uniqueResult();
 
 		if (user != null) {
-			Route route = (Route) getUserRouteQuery
-					.setParameter("userId", user.getId())
-					.setParameter("routeId", Integer.valueOf(routeId))
-					.uniqueResult();
-			if (route != null) {
-				return gson.toJson(route);
+			try {
+				Route route = (Route) getUserRouteQuery
+						.setParameter("userId", user.getId())
+						.setParameter("routeId", Integer.valueOf(routeId))
+						.uniqueResult();
+				if (route != null) {
+					return gson.toJson(route);
+				}
+			} catch (NumberFormatException e) {
+				return "Error";
 			}
 		}
 
@@ -100,9 +112,36 @@ public class RouteRest {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	public String postRoute(@PathParam("username") String userName,
-			String routeJson) {
+			@QueryParam("pw") String password, String routeJson) {
+
+		User user = (User) getUserQuery.setParameter("userName", userName)
+				.uniqueResult();
+
+		if (user == null) {
+			return "Error";
+		}
+
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
+
 		session.beginTransaction();
-		session.save(gson.fromJson(routeJson, Route.class));
+		try {
+			Route route = gson.fromJson(routeJson, Route.class);
+			
+			
+			
+			if (user.getScore() != null) {
+				user.setScore(user.getScore() + ((int) route.getDistance() / 200));
+			} else {
+				user.setScore((int) route.getDistance() / 200);
+			}
+			session.save(route);			
+			session.save(user);			
+			
+		} catch (JsonSyntaxException e) {
+			session.getTransaction().rollback();
+			return "Error";
+		}
 		session.getTransaction().commit();
 		return "OK";
 	}
@@ -120,22 +159,24 @@ public class RouteRest {
 	@Path("/{routeId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public String deleteRoute(@PathParam("username") String userName,
+			@QueryParam("pw") String password,
 			@PathParam("routeId") String routeId) {
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
 
 		User user = (User) getUserQuery.setParameter("userName", userName)
 				.uniqueResult();
 
 		if (user != null) {
 			session.beginTransaction();
-			deleterRouteQuery.setParameter("routeId", Integer.valueOf(routeId))
+			deleteRouteQuery.setParameter("routeId", Integer.valueOf(routeId))
 					.setParameter("userId", user.getId()).executeUpdate();
 			session.getTransaction().commit();
-			
+
 			return "OK";
 
 		}
-		
+
 		return "Error";
 	}
-
 }

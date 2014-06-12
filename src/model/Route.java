@@ -11,17 +11,17 @@ public class Route implements java.io.Serializable {
 
 	private Integer id;
 	private float distance;
-	private Date starttime;
-	private Date stoptime;
+	private Date startTime;
+	private Date stopTime;
 	private int userId;
 
 	public Route() {
 	}
 
-	public Route(float distance, Date starttime, Date stoptime, int userId) {
+	public Route(float distance, Date startTime, Date stopTime, int userId) {
 		this.distance = distance;
-		this.starttime = starttime;
-		this.stoptime = stoptime;
+		this.startTime = startTime;
+		this.stopTime = stopTime;
 		this.userId = userId;
 	}
 
@@ -41,20 +41,20 @@ public class Route implements java.io.Serializable {
 		this.distance = distance;
 	}
 
-	public Date getStarttime() {
-		return this.starttime;
+	public Date getStartTime() {
+		return this.startTime;
 	}
 
-	public void setStarttime(Date starttime) {
-		this.starttime = starttime;
+	public void setStartTime(Date starttime) {
+		this.startTime = starttime;
 	}
 
-	public Date getStoptime() {
-		return this.stoptime;
+	public Date getStopTime() {
+		return this.stopTime;
 	}
 
-	public void setStoptime(Date stoptime) {
-		this.stoptime = stoptime;
+	public void setStopTime(Date stoptime) {
+		this.stopTime = stoptime;
 	}
 
 	public int getUserId() {

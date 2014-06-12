@@ -7,6 +7,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import model.User;
@@ -17,6 +18,8 @@ import org.hibernate.Session;
 import com.google.gson.Gson;
 
 import persistence.HibernateUtil;
+import persistence.Querys;
+import persistence.Validation;
 
 /**
  * @author Jakob
@@ -28,7 +31,7 @@ public class UserRest {
 
 	private Session session = HibernateUtil.getSessionFactory().openSession();
 	private Query getUserQuery = session
-			.createQuery("FROM User U where U.name = :userName");
+			.createQuery(Querys.GET_USER_QUERY);
 	private Gson gson = new Gson();
 
 	/**
@@ -40,8 +43,9 @@ public class UserRest {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public String getUser(@PathParam("username") String userName) {
-		// TODO check pw
+	public String login(@PathParam("username") String userName, @QueryParam("pw") String password) {
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
 
 		List<User> userList = getUserQuery.setParameter("userName", userName)
 				.list();
