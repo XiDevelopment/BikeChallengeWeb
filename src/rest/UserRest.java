@@ -12,6 +12,7 @@ import javax.ws.rs.core.MediaType;
 
 import model.User;
 
+import org.hibernate.PropertyValueException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 
@@ -30,8 +31,7 @@ import persistence.Validation;
 public class UserRest {
 
 	private Session session = HibernateUtil.getSessionFactory().openSession();
-	private Query getUserQuery = session
-			.createQuery(Querys.GET_USER_QUERY);
+	private Query getUserQuery = session.createQuery(Querys.GET_USER_QUERY);
 	private Gson gson = new Gson();
 
 	/**
@@ -43,7 +43,18 @@ public class UserRest {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public String login(@PathParam("username") String userName, @QueryParam("pw") String password) {
+	public String login(@PathParam("username") String userName,
+			@QueryParam("pw") String password) {
+		try {
+			User user = (User) getUserQuery.setParameter("userName", userName)
+					.uniqueResult();
+
+			if (user == null)
+				return "Error";
+		} catch (PropertyValueException e) {
+			return "Error";
+		}
+
 		if (!Validation.checkPassword(userName, password, session))
 			return "Error";
 
@@ -67,12 +78,42 @@ public class UserRest {
 	@Produces(MediaType.APPLICATION_JSON)
 	public String register(@PathParam("username") String userName,
 			String newUser) {
+		
 		if (getUserQuery.setParameter("userName", userName).list().size() == 0) {
 			session.beginTransaction();
 			session.save(gson.fromJson(newUser, User.class));
+			session.getTransaction().commit();
 			return "OK";
 		}
 		return "Error";
+	}
+
+	@POST
+	@Path("/{avatar}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String setAvatar(@PathParam("username") String userName,
+			@QueryParam("pw") String password,
+			@PathParam("avatar") String avatar) {
+		if (!Validation.checkPassword(userName, password, session))
+			return "Error";
+		
+		User user = (User) getUserQuery.setParameter("userName", userName).uniqueResult();
+		
+		if (user == null)
+			return "Error";
+		
+		try {
+			user.setAvatar(Integer.valueOf(avatar));
+			user.setPassword(password);
+		} catch (NumberFormatException e) {
+			return "Error";
+		}
+		
+		session.beginTransaction();
+		session.update(user);
+		session.getTransaction().commit();
+		
+		return "OK";
 	}
 
 	public void deleteUser(String userName) {

@@ -97,9 +97,11 @@ public class FriendRest {
 		
 		if (requestUser == null || requestedUser == null) 
 			return "Error";
+		if (requestUser.getName().equals(requestedUser.getName()))
+			return "Error";
 
 		session.beginTransaction();
-
+		
 		IsFriend request = new IsFriend(new IsFriendId(requestUser.getId(),
 				requestedUser.getId()), "pending");
 
@@ -107,6 +109,7 @@ public class FriendRest {
 			session.save(request);
 			session.getTransaction().commit();
 		} catch (ConstraintViolationException e) {
+			session.getTransaction().rollback();
 			return "Error";
 		}
 
@@ -121,15 +124,21 @@ public class FriendRest {
 		if (!Validation.checkPassword(userName, password, session))
 			return "Error";
 		
+		session.beginTransaction();
+		
 		User requestUser = (User) getUserQuery.setParameter("userName",
 				requestUserName).uniqueResult();
 		User requestedUser = (User) getUserQuery.setParameter("userName",
 				userName).uniqueResult();
 
-		session.beginTransaction();
-
 		IsFriend request = (IsFriend) session.get(IsFriend.class,
 				new IsFriendId(requestUser.getId(), requestedUser.getId()));
+		
+		if (request == null) {
+			session.getTransaction().rollback();
+			return "Error";
+		}
+					
 		request.setStatus("accepted");
 		session.update(request);
 		
@@ -155,7 +164,7 @@ public class FriendRest {
 			return "Error";
 
 		session.beginTransaction();
-
+		
 		IsFriend request = (IsFriend) session.get(IsFriend.class,
 				new IsFriendId(requestUser.getId(), requestedUser.getId()));
 		IsFriend request2 = (IsFriend) session.get(IsFriend.class,

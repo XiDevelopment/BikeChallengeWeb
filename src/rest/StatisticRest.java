@@ -63,7 +63,7 @@ public class StatisticRest {
 				globalTime = ((java.math.BigDecimal) getGlobalTime
 						.uniqueResult()).longValue();
 			}
-			
+
 			return gson.toJson(new Statistic(routes, user.getScore(),
 					globalDistance, globalTime));
 		}

@@ -93,7 +93,7 @@ public class RouteRest {
 						.uniqueResult();
 				if (route != null) {
 					return gson.toJson(route);
-				}
+				}			
 			} catch (NumberFormatException e) {
 				return "Error";
 			}
@@ -127,8 +127,8 @@ public class RouteRest {
 		session.beginTransaction();
 		try {
 			Route route = gson.fromJson(routeJson, Route.class);
-			
-			
+						
+			route.setUserId(user.getId());
 			
 			if (user.getScore() != null) {
 				user.setScore(user.getScore() + ((int) route.getDistance() / 200));

@@ -18,7 +18,11 @@
             <column name="score" not-null="true" />
         </property>
         <property name="email" type="string">
-            <column name="email" length="50" not-null="true" />
+            <column name="email" length="50" />
         </property>
+        <property name="avatar" type="java.lang.Integer">
+            <column name="avatar" not-null="true" />
+        </property>
+        
     </class>
 </hibernate-mapping>
